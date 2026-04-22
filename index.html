@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mod Menu Draggable Glowing</title>
+    <style>
+        :root {
+            --glow-color: #00f2ff;
+            --bg-color: rgba(15, 15, 15, 0.98);
+            --accent-glow: 0 0 15px var(--glow-color);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #111;
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* Bola Berkilau */
+        #floating-ball {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 55px;
+            height: 55px;
+            background: radial-gradient(circle, #fff 0%, var(--glow-color) 80%);
+            border-radius: 50%;
+            box-shadow: var(--accent-glow), 0 0 30px var(--glow-color);
+            cursor: move;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #000;
+            animation: pulse 2s infinite;
+            touch-action: none; /* Penting untuk mobile drag */
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 15px var(--glow-color); }
+            50% { transform: scale(1.05); box-shadow: 0 0 35px var(--glow-color); }
+            100% { transform: scale(1); box-shadow: 0 0 15px var(--glow-color); }
+        }
+
+        /* Papan Mod Menu */
+        #mod-menu {
+            position: absolute;
+            top: 100px;
+            left: 100px;
+            width: 280px;
+            background: var(--bg-color);
+            border: 1px solid var(--glow-color);
+            border-radius: 12px;
+            color: white;
+            display: none;
+            z-index: 10000;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            touch-action: none;
+        }
+
+        .menu-header {
+            background: rgba(0, 242, 255, 0.1);
+            padding: 12px;
+            text-align: center;
+            cursor: move; /* Indikator bisa digeser */
+            border-radius: 12px 12px 0 0;
+            font-weight: bold;
+            border-bottom: 1px solid var(--glow-color);
+            letter-spacing: 1px;
+        }
+
+        .menu-content {
+            padding: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .feature-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            background: rgba(255,255,255,0.03);
+            padding: 8px 10px;
+            border-radius: 6px;
+        }
+
+        /* Switch UI */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 34px;
+            height: 18px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #333;
+            transition: .3s;
+            border-radius: 34px;
+        }
+        input:checked + .slider { background-color: var(--glow-color); box-shadow: 0 0 8px var(--glow-color); }
+
+        .btn-close {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(to right, #ff416c, #ff4b2b);
+            border: none;
+            color: white;
+            border-radius: 0 0 12px 12px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            color: var(--glow-color);
+            margin-bottom: 8px;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+
+<div id="floating-ball">MOD</div>
+
+<div id="mod-menu">
+    <div id="mod-header" class="menu-header">GEMINI MOD MENU</div>
+    
+    <div class="menu-content">
+        <div class="section-label">VISUAL & COMBAT</div>
+        <div class="feature-item"><span>ESP Menu</span><label class="switch"><input type="checkbox"><span class="slider"></span></label></div>
+        <div class="feature-item"><span>Aimbot Menu</span><label class="switch"><input type="checkbox"><span class="slider"></span></label></div>
+        <div class="feature-item"><span>Antena Menu</span><label class="switch"><input type="checkbox"><span class="slider"></span></label></div>
+
+        <div class="section-label">MOVEMENT</div>
+        <div class="feature-item"><span>Terbang Menu</span><label class="switch"><input type="checkbox"><span class="slider"></span></label></div>
+        <div class="feature-item"><span>Teleport Menu</span><label class="switch"><input type="checkbox"><span class="slider"></span></label></div>
+
+        <div class="section-label">OTHERS</div>
+        <div class="feature-item"><span>Unlimited Menu</span><label class="switch"><input type="checkbox"><span class="slider"></span></label></div>
+        <div class="feature-item"><span>Speed Menu</span><label class="switch"><input type="checkbox"><span class="slider"></span></label></div>
+    </div>
+
+    <button class="btn-close" id="close-btn">CLOSE & SAVE</button>
+</div>
+
+<script>
+    const ball = document.getElementById('floating-ball');
+    const menu = document.getElementById('mod-menu');
+    const header = document.getElementById('mod-header');
+    const closeBtn = document.getElementById('close-btn');
+
+    // Fungsi Toggle Menu
+    function toggleMenu() {
+        if (menu.style.display === 'none' || menu.style.display === '') {
+            menu.style.display = 'block';
+            ball.style.display = 'none';
+        } else {
+            menu.style.display = 'none';
+            ball.style.display = 'flex';
+        }
+    }
+
+    // Script Geser (Draggable) Universal
+    function makeDraggable(element, handle) {
+        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        
+        handle.onmousedown = dragMouseDown;
+        handle.ontouchstart = dragMouseDown;
+
+        function dragMouseDown(e) {
+            e = e || window.event;
+            // Deteksi apakah klik atau sentuhan
+            let clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+            let clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+            
+            pos3 = clientX;
+            pos4 = clientY;
+            document.onmouseup = closeDragElement;
+            document.ontouchend = closeDragElement;
+            document.onmousemove = elementDrag;
+            document.ontouchmove = elementDrag;
+            
+            // Simpan posisi awal untuk membedakan Klik vs Geser
+            element.dataset.moved = "false";
+        }
+
+        function elementDrag(e) {
+            e = e || window.event;
+            let clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+            let clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+            
+            pos1 = pos3 - clientX;
+            pos2 = pos4 - clientY;
+            pos3 = clientX;
+            pos4 = clientY;
+            
+            element.style.top = (element.offsetTop - pos2) + "px";
+            element.style.left = (element.offsetLeft - pos1) + "px";
+            element.dataset.moved = "true";
+        }
+
+        function closeDragElement() {
+            document.onmouseup = null;
+            document.onmousemove = null;
+            document.ontouchend = null;
+            document.ontouchmove = null;
+        }
+    }
+
+    // Terapkan fungsi geser ke Bola dan Papan Menu
+    makeDraggable(ball, ball);
+    makeDraggable(menu, header);
+
+    // Event Klik untuk Bola (Hanya buka jika tidak sedang digeser)
+    ball.addEventListener('click', () => {
+        if (ball.dataset.moved === "false") toggleMenu();
+    });
+
+    closeBtn.addEventListener('click', toggleMenu);
+</script>
+
+</body>
+</html>
